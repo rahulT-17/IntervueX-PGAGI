@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import get_db  # replace with your actual import
 from app.models import User, InterviewSession  # replace with your actual import
-from app.schemas import InterviewStartRequest, InterviewStartResponse  # replace with actual import
+from app.schemas import InterviewStartRequest, InterviewStartResponse, RagIngestRequest, RagIngestResponse  # replace with actual import
+
+from app.rag.ingest import ingest_dir
 
 router = APIRouter(prefix="/api/v1")
 
@@ -23,3 +27,12 @@ async def start_interview(payload: InterviewStartRequest, db: AsyncSession = Dep
     await db.refresh(session)
 
     return InterviewStartResponse(session_id=session.id)
+
+@router.post("/rag/ingest", response_model=RagIngestResponse)
+async def ingest_rag_docs(payload: RagIngestRequest):
+    try:
+        result = await run_in_threadpool(ingest_dir, payload.role, payload.docs_path)
+
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return result
