@@ -1,4 +1,4 @@
-PGAGI Backend
+IntervueX
 =============
 
 Production-minded MVP for a role-based AI interview system with a traceable RAG pipeline.
