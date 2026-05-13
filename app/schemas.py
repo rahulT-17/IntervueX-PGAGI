@@ -23,4 +23,14 @@ class AnswerRequest(BaseModel):
 
 class AnswerResponse(BaseModel):
     answer_id: int
-    generated_feedback: dict
+    generated_feedback: str
+
+class RagIngestRequest(BaseModel):
+    role: str
+    docs_path: str | None = None
+
+
+class RagIngestResponse(BaseModel):
+    documents: int
+    chunks: int
+    vectors: int
