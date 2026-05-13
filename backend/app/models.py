@@ -29,7 +29,7 @@ class InterviewSession(Base):
     user: Mapped["User"] = relationship(back_populates="sessions")
     questions: Mapped[list["Question"]] = relationship(back_populates="session")
     retrieval_logs: Mapped[list["RetrievalLog"]] = relationship(back_populates="session")
-
+    resumes: Mapped[list["Resume"]] = relationship(back_populates="session")
 
 class Question(Base):
     __tablename__ = "questions"
@@ -55,6 +55,24 @@ class Answer(Base):
 
     question: Mapped["Question"] = relationship(back_populates="answers")
 
+class Resume(Base):
+    __tablename__ = "resumes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    session_id: Mapped[int | None] = mapped_column(
+        ForeignKey("interview_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    parsed_profile: Mapped[dict] = mapped_column(JSON, default=dict)
+    confidence: Mapped[dict] = mapped_column(JSON, default=dict)
+    missing_fields: Mapped[list[str]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    session: Mapped["InterviewSession"] = relationship(back_populates="resumes")
 
 class RetrievalLog(Base):
     __tablename__ = "retrieval_logs"

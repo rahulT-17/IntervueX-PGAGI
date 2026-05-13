@@ -7,6 +7,7 @@ Project Idea
 ------------
 Build an AI interview backend that can:
 - ingest role-relevant documents,
+- parse candidate resumes into structured profile data,
 - retrieve grounded context for interview generation,
 - generate interview questions,
 - evaluate candidate answers,
@@ -67,6 +68,37 @@ Current API Endpoints
 - `POST /api/v1/interview/question`
 - `POST /api/v1/interview/answer`
 - `GET /api/v1/interview/{session_id}/summary?include_chunks=true|false`
+- `POST /api/v1/resume/upload`
+- `GET /api/v1/resume/{resume_id}`
+
+Resume-Assisted Flow
+--------------------
+- `POST /resume/upload` extracts and stores:
+  `full_name`, `email`, `phone`, `skills`, `target_roles`, confidence, and missing fields.
+- `POST /rag/retrieve` and `POST /interview/question` support optional `resume_id`.
+- If `resume_id` is provided and request `role/skills` are empty:
+  role/skills are auto-derived from the stored parsed profile.
+- Manual request values still override resume-derived values.
+
+End-to-End Demo Flow
+--------------------
+1) Start session: `POST /interview/start`
+2) Upload resume: `POST /resume/upload` (optionally with `session_id`)
+3) Ingest docs: `POST /rag/ingest`
+4) Retrieve context: `POST /rag/retrieve` (with `resume_id` or manual role/skills)
+5) Generate question: `POST /interview/question`
+6) Submit answer: `POST /interview/answer`
+7) View summary: `GET /interview/{session_id}/summary?include_chunks=true`
+
+Current Gate Snapshot
+---------------------
+- Gate 0: done
+- Gate 1 (resume parsing/upload): done
+- Gate 2 (RAG ingestion): done
+- Gate 3 (retrieval + logging): done
+- Gate 4 (question generation): done
+- Gate 5 (answer + feedback loop): done
+- Gate 6 (summary endpoint): done
 
 Key Design Decisions I Made
 ---------------------------
