@@ -9,9 +9,13 @@ def build_query(role: str, skills: list[str], context: str | None = None) -> str
     return f"{role} interview topics for {skills_str}.{ctx}"
 
 
-def retrieve_chunks(query: str, top_k: int = 6) -> list[dict]:
+def retrieve_chunks(query: str, top_k: int = 6, role: str | None = None) -> list[dict]:
     collection = get_collection()
-    result = collection.query(query_texts=[query], n_results=top_k)
+    query_kwargs = {"query_texts": [query], "n_results": top_k}
+    if role:
+        query_kwargs["where"] = {"role": role.strip().lower()}
+
+    result = collection.query(**query_kwargs)
     chunks: list[dict] = []
 
     for idx in range(len(result["documents"][0])):

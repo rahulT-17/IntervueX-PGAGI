@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class InterviewStartRequest(BaseModel):
     user_name: str
@@ -38,10 +38,10 @@ class RagIngestResponse(BaseModel):
 class RagRetrieveRequest(BaseModel):
     session_id: int
     role: str
-    skills: list[str] = []
+    skills: list[str] = Field(default_factory=list)
     context: str | None = None
     query: str | None = None
-    top_k: int = 6
+    top_k: int = Field(default=6, ge=1, le=20)
 
 
 class RagRetrieveResponse(BaseModel):
@@ -52,9 +52,9 @@ class RagRetrieveResponse(BaseModel):
 class InterviewQuestionRequest(BaseModel):
     session_id: int
     role: str
-    skills: list[str] = []
+    skills: list[str] = Field(default_factory=list)
     context: str | None = None
-    top_k: int = 6
+    top_k: int = Field(default=6, ge=1, le=20)
     query: str | None = None
 
 

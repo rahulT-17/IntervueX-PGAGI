@@ -1,12 +1,21 @@
-import json
+from typing import Literal
+
+from pydantic import BaseModel
 
 from app.services.llm_client import chat_complete
+from app.services.llm_json import parse_json_object
 
 
 SYSTEM_PROMPT = """You are an interview question generator.
 Return JSON only with keys: question, topic, difficulty.
 Difficulty must be one of: easy, medium, hard.
 """
+
+
+class QuestionPayload(BaseModel):
+    question: str
+    topic: str
+    difficulty: Literal["easy", "medium", "hard"]
 
 
 def _build_prompt(role: str, skills: list[str], context: str | None, chunks: list[dict]) -> str:
@@ -28,4 +37,5 @@ Generate one interview question grounded in the retrieved context.
 async def generate_question(role: str, skills: list[str], context: str | None, chunks: list[dict]) -> dict:
     prompt = _build_prompt(role, skills, context, chunks)
     raw = await chat_complete(SYSTEM_PROMPT, prompt)
-    return json.loads(raw)
+    payload = parse_json_object(raw)
+    return QuestionPayload.model_validate(payload).model_dump()

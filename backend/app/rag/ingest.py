@@ -34,6 +34,7 @@ def _load_text(path: Path) -> str:
 
 
 def ingest_dir(role: str, docs_path: str | None = None) -> dict:
+    normalized_role = role.strip().lower()
     docs_dir = Path(docs_path) if docs_path else Path(settings.rag_docs_dir)
     if not docs_dir.exists():
         raise FileNotFoundError(f"Docs directory not found: {docs_dir}")
@@ -57,7 +58,7 @@ def ingest_dir(role: str, docs_path: str | None = None) -> dict:
             documents.append(chunk)
             metadatas.append(
                 {
-                    "role": role,
+                    "role": normalized_role,
                     "source": str(path),
                     "chunk_index": i,
                 }

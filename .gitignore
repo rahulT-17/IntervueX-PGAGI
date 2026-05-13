@@ -1,22 +1,28 @@
-# venv
+# root editor files
+.vscode/
+*.code-workspace
+
+# python environments
 venv/
 .venv/
 env/
+backend/venv/
+backend/.venv/
+backend/env/
 
 # env files
 .env
 .env.*
 !.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 
 # python cache
 __pycache__/
 *.pyc
 
-# editor
-.vscode/
-*.code-workspace
-
-# data
+# vector and local docs storage
 data/chroma/
 data/docs/
 backend/data/chroma/

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
+from pydantic import ValidationError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,7 +59,7 @@ async def ingest_rag_docs(payload: RagIngestRequest):
 async def retrieve_rag(payload: RagRetrieveRequest, db: AsyncSession = Depends(get_db)):
 
     query = payload.query or build_query(payload.role, payload.skills, payload.context)
-    chunks = retrieve_chunks(query, payload.top_k)
+    chunks = retrieve_chunks(query, payload.top_k, role=payload.role)
 
     await log_retrieval(db, payload.session_id, query, chunks)
     return RagRetrieveResponse(query=query, top_k=payload.top_k, chunks=chunks)
@@ -66,9 +67,13 @@ async def retrieve_rag(payload: RagRetrieveRequest, db: AsyncSession = Depends(g
 @router.post("/interview/question", response_model=InterviewQuestionResponse)
 async def generate_interview_question(payload: InterviewQuestionRequest, db: AsyncSession = Depends(get_db)):
     query = payload.query or build_query(payload.role, payload.skills, payload.context)
-    chunks = retrieve_chunks(query, payload.top_k)
+    chunks = retrieve_chunks(query, payload.top_k, role=payload.role)
 
-    result = await generate_question(payload.role, payload.skills, payload.context, chunks)
+    try:
+        result = await generate_question(payload.role, payload.skills, payload.context, chunks)
+    except (ValueError, ValidationError) as exc:
+        raise HTTPException(status_code=502, detail=f"Invalid LLM question payload: {exc}") from exc
+
     question = Question(
         session_id=payload.session_id,
         question=result["question"],
@@ -95,11 +100,14 @@ async def submit_answer(payload: AnswerSubmitRequest, db: AsyncSession = Depends
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
 
-    feedback = await evaluate_answer(
-        question.question,
-        payload.answer,
-        question.source_chunks,
-    )
+    try:
+        feedback = await evaluate_answer(
+            question.question,
+            payload.answer,
+            question.source_chunks,
+        )
+    except (ValueError, ValidationError) as exc:
+        raise HTTPException(status_code=502, detail=f"Invalid LLM feedback payload: {exc}") from exc
 
     answer = Answer(
         question_id=payload.question_id,
