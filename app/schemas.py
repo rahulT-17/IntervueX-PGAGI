@@ -34,3 +34,17 @@ class RagIngestResponse(BaseModel):
     documents: int
     chunks: int
     vectors: int
+
+class RagRetrieveRequest(BaseModel):
+    session_id: int
+    role: str
+    skills: list[str] = []
+    context: str | None = None
+    query: str | None = None
+    top_k: int = 6
+
+
+class RagRetrieveResponse(BaseModel):
+    query: str
+    top_k: int
+    chunks: list[dict]

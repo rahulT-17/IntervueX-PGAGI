@@ -5,9 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import get_db  # replace with your actual import
 from app.models import User, InterviewSession  # replace with your actual import
-from app.schemas import InterviewStartRequest, InterviewStartResponse, RagIngestRequest, RagIngestResponse  # replace with actual import
+from app.schemas import InterviewStartRequest, InterviewStartResponse, RagIngestRequest, RagIngestResponse, RagRetrieveRequest, RagRetrieveResponse
 
 from app.rag.ingest import ingest_dir
+from app.rag.retrieval import build_query, retrieve_chunks
+from app.services.retrieval_logger import log_retrieval
 
 router = APIRouter(prefix="/api/v1")
 
@@ -35,4 +37,14 @@ async def ingest_rag_docs(payload: RagIngestRequest):
 
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    
     return result
+
+@router.post("/rag/retrieve", response_model=RagRetrieveResponse)
+async def retrieve_rag(payload: RagRetrieveRequest, db: AsyncSession = Depends(get_db)):
+    
+    query = payload.query or build_query(payload.role, payload.skills, payload.context)
+    chunks = retrieve_chunks(query, payload.top_k)
+
+    await log_retrieval(db, payload.session_id, query, chunks)
+    return RagRetrieveResponse(query=query, top_k=payload.top_k, chunks=chunks)
