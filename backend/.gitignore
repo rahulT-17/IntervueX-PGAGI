@@ -1,0 +1,20 @@
+# venv
+venv/
+.venv/
+env/
+
+# env files
+.env
+.env.*
+!.env.example
+
+# python cache
+__pycache__/
+*.pyc
+
+# editor
+.vscode/
+*.code-workspace
+
+# data
+data/chroma/

@@ -1,0 +1,16 @@
+This is a small test document for the PGAGI RAG pipeline.
+It talks about backend engineering with FastAPI, SQLAlchemy, and PostgreSQL.
+
+FastAPI is a Python web framework used to build APIs quickly.
+SQLAlchemy is used for database models and queries.
+PostgreSQL is a relational database that stores structured data.
+
+In a RAG system, documents are split into chunks, embedded into vectors,
+and stored in a vector database like ChromaDB.
+Later, a query retrieves the most relevant chunks for question generation.
+
+Key topics to retrieve:
+- async SQLAlchemy sessions
+- FastAPI dependency injection
+- Postgres connection URLs
+- embedding models like sentence-transformers
