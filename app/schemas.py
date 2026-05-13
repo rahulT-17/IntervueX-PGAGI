@@ -48,3 +48,28 @@ class RagRetrieveResponse(BaseModel):
     query: str
     top_k: int
     chunks: list[dict]
+
+class InterviewQuestionRequest(BaseModel):
+    session_id: int
+    role: str
+    skills: list[str] = []
+    context: str | None = None
+    top_k: int = 6
+    query: str | None = None
+
+
+class InterviewQuestionResponse(BaseModel):
+    question_id: int
+    question: str
+    topic: str
+    difficulty: str
+    source_chunks: list[dict]
+
+class AnswerSubmitRequest(BaseModel):
+    question_id: int
+    answer: str
+
+
+class AnswerSubmitResponse(BaseModel):
+    answer_id: int
+    generated_feedback: dict

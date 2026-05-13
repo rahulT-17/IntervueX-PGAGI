@@ -14,7 +14,10 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "data/chroma"
     chroma_collection_name: str = "pgagi_rag"
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
-    chunk_size: int = 80
-    chunk_overlap: int = 20
+    chunk_size: int = 500
+    chunk_overlap: int = 80
+    llm_base_url: str = "http://127.0.0.1:1234/v1"
+    llm_api_key: str = "local"
+    llm_model: str = "mistralai/mistral-7b-instruct-v0.3"
 
 settings = Settings()

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import re
 import hashlib
 from pathlib import Path
 
-import pdfplumber
+import fitz # PyMuPDF
 
 from app.core.settings import settings
 from app.rag.chunking import chunk_text
@@ -13,15 +14,22 @@ from app.rag.vector_store import get_collection
 SUPPORTED_EXTS = {".pdf", ".txt", ".md"}
 
 
+def _clean_text(text: str) -> str:
+    text = text.replace("\n", " ")
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"(?<=\w)-\s+(?=\w)", "", text)  # fix hyphen line breaks
+    return text.strip()
+
 def _load_text(path: Path) -> str:
     if path.suffix.lower() in {".txt", ".md"}:
-        return path.read_text(encoding="utf-8", errors="ignore")
+        return _clean_text(path.read_text(encoding="utf-8", errors="ignore"))
+    
     if path.suffix.lower() == ".pdf":
         pages: list[str] = []
-        with pdfplumber.open(path) as pdf:
-            for page in pdf.pages:
-                pages.append(page.extract_text() or "")
-        return "\n".join(pages)
+        with fitz.open(path) as doc:
+            for page in doc:
+                pages.append(_clean_text(page.get_text("text") or ""))
+        return _clean_text(" ".join(pages))
     return ""
 
 
@@ -70,3 +78,4 @@ def ingest_dir(role: str, docs_path: str | None = None) -> dict:
         "chunks": len(documents),
         "vectors": len(documents),
     }
+
