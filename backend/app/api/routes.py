@@ -112,6 +112,11 @@ async def retrieve_rag(payload: RagRetrieveRequest, db: AsyncSession = Depends(g
 
     query = payload.query or build_query(resolved_role, resolved_skills, payload.context)
     chunks = retrieve_chunks(query, payload.top_k, role=resolved_role)
+    if not chunks:
+        raise HTTPException(
+            status_code=422,
+            detail="insufficient_context: retrieval confidence too low for reliable question generation",
+        )
 
     await log_retrieval(db, payload.session_id, query, chunks)
     return RagRetrieveResponse(query=query, top_k=payload.top_k, chunks=chunks)
@@ -134,6 +139,11 @@ async def generate_interview_question(payload: InterviewQuestionRequest, db: Asy
 
     query = payload.query or build_query(resolved_role, resolved_skills, payload.context)
     chunks = retrieve_chunks(query, payload.top_k, role=resolved_role)
+    if not chunks:
+        raise HTTPException(
+            status_code=422,
+            detail="insufficient_context: retrieval confidence too low for reliable question generation",
+        )
 
     try:
         result = await generate_question(resolved_role, resolved_skills, payload.context, chunks)

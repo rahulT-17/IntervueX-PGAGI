@@ -15,7 +15,7 @@ Build an AI interview backend that can:
 
 Repository Layout
 -----------------
-This repo keeps backend code inside `backend/`:
+This repo uses a split backend + frontend layout:
 
 ```
 backend/
@@ -25,6 +25,10 @@ backend/
   .env.example
   .gitignore
   requirements.txt
+frontend/
+  src/
+  .env.example
+  package.json
 ```
 
 Quickstart
@@ -51,6 +55,24 @@ Quickstart
 
    `uvicorn app.main:app --reload`
 
+Frontend Quickstart
+-------------------
+1) Open a new terminal:
+
+   `cd frontend`
+
+2) Install dependencies:
+
+   `npm install`
+
+3) Copy frontend env:
+
+   `copy .env.example .env`
+
+4) Run frontend:
+
+   `npm run dev`
+
 Configuration (.env)
 --------------------
 - `DATABASE_URL`: async Postgres URL (asyncpg)
@@ -58,6 +80,10 @@ Configuration (.env)
 - `CHROMA_PERSIST_DIR`: local vector store path (default `data/chroma`)
 - `LLM_BASE_URL`: OpenAI-compatible endpoint
 - `LLM_MODEL`: model id
+
+Frontend API Configuration
+--------------------------
+- `VITE_API_BASE_URL`: defaults to `http://localhost:8000/api/v1`
 
 Current API Endpoints
 ---------------------
@@ -80,6 +106,15 @@ Resume-Assisted Flow
   role/skills are auto-derived from the stored parsed profile.
 - Manual request values still override resume-derived values.
 
+Retrieval Quality Controls
+--------------------------
+- Query expansion from skill synonyms is enabled to improve semantic recall.
+- Retrieval supports metadata-aware filtering (`role`, optional `topic`, optional `domain`).
+- Retrieved chunks are soft-reranked with penalties for low-signal patterns.
+- Confidence gating is applied:
+  if retrieval confidence is too low, APIs return
+  `422 insufficient_context` instead of generating weak questions.
+
 End-to-End Demo Flow
 --------------------
 1) Start session: `POST /interview/start`
@@ -89,6 +124,14 @@ End-to-End Demo Flow
 5) Generate question: `POST /interview/question`
 6) Submit answer: `POST /interview/answer`
 7) View summary: `GET /interview/{session_id}/summary?include_chunks=true`
+
+Frontend Experience (Current)
+-----------------------------
+- React + Vite single-page wizard flow:
+  Start Session -> Upload + Setup -> Question + Answer -> Summary
+- Step-based UX with status panel, traceability view, feedback cards, and summary metrics.
+- Backend CORS is enabled for:
+  `http://localhost:5173` and `http://127.0.0.1:5173`
 
 Current Gate Snapshot
 ---------------------
@@ -108,6 +151,8 @@ Key Design Decisions I Made
   Every retrieval stores generated query + retrieved chunks in `retrieval_logs`.
 - Role-aware retrieval:
   Documents are tagged with role metadata and retrieval filters by role for better relevance.
+- Retrieval quality gating:
+  weak retrieval now fails safely with `insufficient_context` instead of forcing low-quality question generation.
 - Strict request validation:
   `top_k` is bounded and list defaults use safe factories to avoid mutable default bugs.
 - Mistral-compatible prompting:
@@ -116,4 +161,3 @@ Key Design Decisions I Made
   LLM outputs are parsed and schema-validated before persistence/response to avoid brittle runtime failures.
 - Evidence-preserving data model:
   Questions persist `source_chunks`, answers persist `generated_feedback`, and summary supports `include_chunks` toggle.
-
