@@ -139,6 +139,11 @@ async def generate_interview_question(payload: InterviewQuestionRequest, db: Asy
         result = await generate_question(resolved_role, resolved_skills, payload.context, chunks)
     except (ValueError, ValidationError) as exc:
         raise HTTPException(status_code=502, detail=f"Invalid LLM question payload: {exc}") from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Question generation failed. Check LLM_BASE_URL/model server. Error: {exc}",
+        ) from exc
 
     question = Question(
         session_id=payload.session_id,
@@ -175,6 +180,11 @@ async def submit_answer(payload: AnswerSubmitRequest, db: AsyncSession = Depends
         )
     except (ValueError, ValidationError) as exc:
         raise HTTPException(status_code=502, detail=f"Invalid LLM feedback payload: {exc}") from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Answer evaluation failed. Check LLM_BASE_URL/model server. Error: {exc}",
+        ) from exc
 
     answer = Answer(
         question_id=payload.question_id,
